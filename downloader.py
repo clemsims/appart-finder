@@ -55,7 +55,6 @@ class Downloader:
         self.home_url: str = HOMEURL
         self.login_url: str = LOGIN_URL
         self.url: str = URL
-        self.config: Config = Config()
         self.session = None
         self.apartments: Dict[str, str] = {}
         self.pool_size: int = 0
