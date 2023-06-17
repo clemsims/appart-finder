@@ -1,5 +1,9 @@
 scraper.json
 __pycache__/downloader.cpython-39.pyc
-moodle_scraper.log
+appart_finder.log
 rooms.txt
 error.html
+*.csv
+scraping ideas.py
+test.ipynb
+__pycache__/compare_results.cpython-39.pyc

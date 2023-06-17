@@ -17,9 +17,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-logger = logging.getLogger("moodle_scraper")
+logger = logging.getLogger("appart_finder")
 # save logs to file
-logging.basicConfig(filename='moodle_scraper.log', level=logging.INFO)
+logging.basicConfig(filename='appart_finder.log', level=logging.INFO)
 # create console handler and set level to debug
 ch = logging.StreamHandler()
 ch.setLevel(logging.INFO)
@@ -32,7 +32,7 @@ ch.setFormatter(formatter)
 # add ch to logger
 logger.addHandler(ch)
 
-config = json.load(open('scraper.json'))  # TODO: gitignore this file
+config = json.load(open('scraper.json'))
 
 GMAIL = config.get('gmail', None)
 DIRECTORY = config.get('directory', None)
@@ -52,6 +52,8 @@ class Downloader:
         self.results = {}
         self.apartments = []
         self.rooms = {}
+        self.filename = "apt_results{}.csv".format(
+            datetime.now().strftime("%Y%m%d-%H%M%S"))
 
     def run(self):
         self.driver = self.get_connection()
@@ -68,6 +70,7 @@ class Downloader:
         options_gmail.add_argument("profile-directory=Profile 4")
         options_gmail.add_argument("--disable-extensions")
         options_gmail.add_argument("--window-size=1920,1080")
+        options_gmail.add_argument("--headless")
 
         while attempts_left > 0:
             try:
@@ -160,7 +163,7 @@ class Downloader:
         #                 25 logements disponibles
         #             </b></h2>
 
-        sleep(15)
+        sleep(10)
         # FIXME:
         # 15s wait is a quick workaround the fact that some JS code is in-between the loading and the filling of the DOM...
         # This is not a good practice, but I don't have time to find a better solution for now.
@@ -263,20 +266,31 @@ class Downloader:
                 except Exception as e:
                     room_available = "Indisponible"
 
+
+
+                # encoding:
+                room_name = room_name.replace(",", "")
+                apt_name = apt_name.replace(",", "")
+                # remove any commas in the name:
+
+            
+
                 rooms[apt_name] = {
                     'room_id': room_id,
                     'room_name': room_name,
                     'room_price': room_price,
-                    'room_available': room_available
-                }  # TODO: hash it? + stick to the code that was given to the apts in the url!
+                    'room_available': room_available,
+                    'room_link': apt_url
+                }
 
                 logger.info(
                     f"{apt_name} - {room_name} - {room_price} - {room_available}")
 
-                # TODO: change to csv and name the files according to metadata (system date, etc...)
-                with open("rooms.txt", "a") as f:
+                # store in csv apt_results.csv:
+                # apt_name, room_name, room_price, room_available
+                with open(self.filename, "a") as f:
                     f.write(
-                        f"{apt_name} - {room_name} - {room_price} - {room_available}\n")
+                        f"{apt_name}, {room_name}, {room_price}, {room_available}, {apt_url}\n")
 
         logger.info("Found %d rooms in total", len(rooms))
         return rooms
